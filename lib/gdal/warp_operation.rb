@@ -7,8 +7,6 @@ module GDAL
     def initialize(warp_options)
       @c_pointer = FFI::GDAL::Warper.GDALCreateWarpOperation(warp_options.c_struct)
       fail 'blort' if @c_pointer.null?
-
-      # ObjectSpace.define_finalizer self, -> { destroy! }
     end
 
     def destroy!

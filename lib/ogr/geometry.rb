@@ -87,10 +87,7 @@ module OGR
                       geometry_ptr_ptr.read_pointer.null?
         geometry_ptr_ptr.read_pointer.nil?
 
-        geometry = factory(geometry_ptr_ptr.read_pointer)
-        ObjectSpace.define_finalizer(geometry) { destroy! }
-
-        geometry
+        factory(geometry_ptr_ptr.read_pointer)
       end
 
       # @param gml_data [String]

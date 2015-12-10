@@ -24,9 +24,6 @@ module OGR
       if !@c_pointer.is_a?(FFI::Pointer) || @c_pointer.null?
         fail OGR::InvalidFeatureDefinition, "Unable to create #{self.class.name} from #{name_or_pointer}"
       end
-
-      close_me = -> { FFI::OGR::API.OGR_FD_Destroy(@c_pointer) }
-      ObjectSpace.define_finalizer self, close_me
     end
 
     def release!

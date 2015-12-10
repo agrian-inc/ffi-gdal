@@ -20,8 +20,6 @@ module OGR
       unless @c_pointer.is_a?(FFI::Pointer) && !@c_pointer.null?
         fail OGR::InvalidFieldDefinition, "Unable to create #{self.class.name} from #{name_or_pointer}"
       end
-
-      ObjectSpace.define_finalizer(self, -> { destroy! })
     end
 
     def destroy!

@@ -45,7 +45,6 @@ module OGR
       fail OGR::OpenFailure, file_path if @c_pointer.null?
 
       @layers = []
-      ObjectSpace.define_finalizer self, -> { destroy! }
     end
 
     # Closes opened data source and releases allocated resources.

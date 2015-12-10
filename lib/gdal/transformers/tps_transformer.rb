@@ -19,7 +19,6 @@ module GDAL
         end
 
         @c_pointer = FFI::GDAL::Alg.GDALCreateTPSTransformer(gcp_list.size, gcp_list_ptr, reversed)
-        ObjectSpace.define_finalizer self, -> { destroy! }
       end
 
       def destroy!

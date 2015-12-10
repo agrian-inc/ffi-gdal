@@ -26,9 +26,6 @@ module OGR
       if !@c_pointer.is_a?(FFI::Pointer) || @c_pointer.null?
         fail OGR::InvalidFeature, "Unable to create Feature with #{fd_or_pointer}"
       end
-
-      close_me = -> { destroy! }
-      ObjectSpace.define_finalizer self, close_me
     end
 
     def destroy!

@@ -14,10 +14,6 @@ module GDAL
       def initialize(source_wkt, destination_wkt)
         @c_pointer = FFI::GDAL::Alg.GDALCreateReprojectionTransformer(source_wkt, destination_wkt)
 
-        ObjectSpace.define_finalizer(transformer_ptr) do
-          destroy_reprojection_transformer(transformer_ptr)
-        end
-
         transformer_ptr
       end
 

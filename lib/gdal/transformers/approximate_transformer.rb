@@ -19,8 +19,6 @@ module GDAL
           base_transformer_function,
           transformer_arg_ptr,
           max_error)
-
-        ObjectSpace.define_finalizer self, -> { destroy! }
       end
 
       def destroy!

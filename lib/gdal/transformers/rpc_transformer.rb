@@ -34,8 +34,6 @@ module GDAL
           reversed,
           pixel_error_threshold,
           options_ptr)
-
-        ObjectSpace.define_finalizer self, -> { destroy! }
       end
 
       def destroy!

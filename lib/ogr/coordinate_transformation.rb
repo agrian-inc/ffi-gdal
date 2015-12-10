@@ -28,9 +28,6 @@ module OGR
       if @c_pointer.null?
         fail OGR::Failure, 'Unable to create coordinate transformation'
       end
-
-      close_me = -> { destroy! }
-      ObjectSpace.define_finalizer self, close_me
     end
 
     # Deletes the object and deallocates all related resources.

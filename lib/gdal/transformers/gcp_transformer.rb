@@ -33,8 +33,6 @@ module GDAL
                          requested_polynomial_order,
                          reversed)
                      end
-
-        ObjectSpace.define_finalizer self, -> { destroy! }
       end
 
       def destroy!
