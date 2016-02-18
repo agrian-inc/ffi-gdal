@@ -18,7 +18,12 @@ module OGR
 
         loop do
           break unless feature = next_feature
-          yield feature
+
+          begin
+            yield feature
+          ensure
+            feature.destroy!
+          end
         end
 
         reset_reading

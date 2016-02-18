@@ -168,7 +168,7 @@ module OGR
     end
 
     # @param index [Fixnum]
-    # @return [OGR::FieldDefinition]
+    # @return [OGR::FieldDefinition] no need to dispose this as its just a reference
     def field_definition(index)
       field_pointer = FFI::OGR::API.OGR_F_GetFieldDefnRef(@c_pointer, index)
       return nil if field_pointer.null?
@@ -195,7 +195,8 @@ module OGR
       FFI::OGR::API.OGR_F_UnsetField(@c_pointer, index)
     end
 
-    # @return [OGR::FeatureDefinition,nil]
+    # @return [OGR::FeatureDefinition,nil] This does not need to be destroyed
+    #   as it is only a reference to the original object
     def definition
       feature_defn_ptr = FFI::OGR::API.OGR_F_GetDefnRef(@c_pointer)
       return nil if feature_defn_ptr.null?

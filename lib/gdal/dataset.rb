@@ -75,7 +75,6 @@ module GDAL
         end
 
       fail OpenFailure, path_or_pointer if @c_pointer.null?
-      ObjectSpace.define_finalizer self, -> { close }
 
       @geo_transform = nil
       @spatial_reference = nil

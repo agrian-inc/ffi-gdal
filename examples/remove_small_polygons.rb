@@ -52,6 +52,7 @@ module Examples
       layer.each_feature.with_index do |feature, i|
         area = feature.geometry.area
         puts "Feature #{i} area: #{area}"
+        feature.destroy!
       end
 
       data_source.close

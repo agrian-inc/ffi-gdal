@@ -42,7 +42,7 @@ module OGR
     end
 
     # @param index [Fixnum]
-    # @return [OGR::FieldDefinition]
+    # @return [OGR::FieldDefinition] This does not need to be destroyed
     def field_definition(index)
       field_definition_ptr =
         FFI::OGR::API.OGR_FD_GetFieldDefn(@c_pointer, index)
