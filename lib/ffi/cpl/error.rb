@@ -1,3 +1,4 @@
+# typed: true
 # frozen_string_literal: true
 
 require_relative '../../ext/ffi_library_function_checks'

@@ -37,3 +37,4 @@ valgrind_output.log
 
 .tags
 /spec/examples.txt
+sorbet/rbi/hidden-definitions/errors.txt

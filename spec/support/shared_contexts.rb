@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 RSpec.shared_context 'OGR::Layer, spatial_reference' do

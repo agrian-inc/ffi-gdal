@@ -25,13 +25,15 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'log_switch', '~> 1.0.0'
   spec.add_dependency 'multi_xml'
   spec.add_dependency 'narray', '~> 0.6.0'
+  spec.add_dependency 'sorbet-runtime'
 
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'byebug'
-  spec.add_development_dependency 'fakefs'
+  # spec.add_development_dependency 'fakefs'
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'rspec', '~> 3.0'
   spec.add_development_dependency 'rubocop'
   spec.add_development_dependency 'rubocop-checkstyle_formatter'
   spec.add_development_dependency 'simplecov', '~> 0.9'
+  spec.add_development_dependency 'sorbet'
 end
