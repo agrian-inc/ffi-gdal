@@ -1,4 +1,4 @@
-# typed: false
+# typed: true
 # frozen_string_literal: true
 
 require 'ffi'
@@ -51,7 +51,7 @@ module FFI
       return ENV['GDAL_LIBRARY_PATH'] if ENV['GDAL_LIBRARY_PATH']
 
       @search_paths ||= begin
-        paths = ENV['PATH'].split(File::PATH_SEPARATOR)
+        paths = ENV['PATH']&.split(File::PATH_SEPARATOR) || []
 
         unless FFI::Platform.windows?
           paths += %w[/usr/local/{lib64,lib} /opt/local/{lib64,lib} /usr/{lib64,lib} /usr/lib/{x86_64,i386}-linux-gnu]

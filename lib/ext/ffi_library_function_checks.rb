@@ -8,6 +8,8 @@ module FFI
   # Redefining #attach_function so we can avoid bombing out if a called method
   # is not defined.
   module Library
+    include Kernel
+
     alias old_attach_function attach_function
 
     def attach_function(*args)
