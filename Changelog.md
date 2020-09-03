@@ -128,6 +128,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `GDAL::RasterBand#no_data_value` uses `BigDecimal` for checking the returned
   float value.
+- BREAKING: `GDAL::Dataset#raster_x_size` and `raster_y_size` return 0 instead of `nil`
+  if the internal call fails.
 
 #### OGR
 

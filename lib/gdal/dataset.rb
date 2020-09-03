@@ -168,14 +168,14 @@ module GDAL
 
     # @return [Integer]
     def raster_x_size
-      return nil if null?
+      return 0 if null?
 
       FFI::GDAL::GDAL.GDALGetRasterXSize(@c_pointer)
     end
 
     # @return [Integer]
     def raster_y_size
-      return nil if null?
+      return 0 if null?
 
       FFI::GDAL::GDAL.GDALGetRasterYSize(@c_pointer)
     end
