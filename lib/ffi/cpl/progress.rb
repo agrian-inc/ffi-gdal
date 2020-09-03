@@ -21,10 +21,10 @@ module FFI
                       :void
       ScaledProgress = attach_function :GDALScaledProgress,
                                        %i[double string pointer],
-                                       :int
+                                       :bool
       TermProgress = attach_function :GDALTermProgress,
                                      %i[double string pointer],
-                                     :int
+                                     :bool
     end
   end
 end

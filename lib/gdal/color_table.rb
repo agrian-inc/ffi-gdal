@@ -4,6 +4,7 @@
 require_relative '../gdal'
 require_relative 'color_table_mixins/extensions'
 require_relative 'color_entry'
+require 'sorbet-runtime'
 
 module GDAL
   module ColorTableTypes
@@ -18,10 +19,12 @@ module GDAL
   end
 
   class ColorTable
+    extend T::Sig
     include ColorTableMixins::Extensions
 
     # @param color_table [GDAL::ColorTable]
     # @return [FFI::AutoPointer]
+    sig { params(color_table: T.any(FFI::Pointer, GDAL::ColorTable)).void }
     def self.new_pointer(color_table)
       ptr = GDAL._pointer(GDAL::ColorTable, color_table, autorelease: false)
 
@@ -29,8 +32,9 @@ module GDAL
     end
 
     # @param pointer [FFI::Pointer]
+    sig { params(pointer: FFI::Pointer).void }
     def self.release(pointer)
-      return unless pointer && !pointer.null?
+      return if pointer.null?
 
       FFI::GDAL::GDAL.GDALDestroyColorTable(pointer)
     end
@@ -38,9 +42,10 @@ module GDAL
     # @return [FFI::Pointer] C pointer to the C color table.
     attr_reader :c_pointer
 
-    # @param palette_interp_or_pointer [FFI::GDAL::PaletteInterp,
-    #   FFI::Pointer]
+    # @param palette_interp_or_pointer [FFI::Enum, FFI::Pointer] The enum must
+    #   be a FFI::GDAL::PaletteInterp.
     # @raise [GDAL::InvalidColorTable] If unable to create the color table.
+    sig { params(palette_interp_or_pointer: T.any(FFI::Pointer, FFI::Enum)).void }
     def initialize(palette_interp_or_pointer)
       pointer =
         if FFI::GDAL::GDAL::PaletteInterp[palette_interp_or_pointer]
@@ -79,29 +84,34 @@ module GDAL
     # Clones the ColorTable using the C API.
     #
     # @return [GDAL::ColorTable]
+    # @raise [GDAL::InvalidColorTable]
+    sig { returns(GDAL::ColorTable) }
     def clone
       ct_ptr = FFI::GDAL::GDAL.GDALCloneColorTable(@c_pointer)
       ct_ptr.autorelease = false
 
-      return nil if ct_ptr.null?
+      raise GDAL::InvalidColorTable if ct_ptr.null?
 
       GDAL::ColorTable.new(ct_ptr)
     end
 
     # Usually :GPI_RGB.
     #
-    # @return [Symbol] One of FFI::GDAL::GDAL::PaletteInterp.
+    # @return [FFI::Enum] One of FFI::GDAL::GDAL::PaletteInterp.
+    sig { returns(FFI::Enum) }
     def palette_interpretation
       FFI::GDAL::GDAL.GDALGetPaletteInterpretation(@c_pointer)
     end
 
     # @return [Integer]
+    sig { returns(Integer) }
     def color_entry_count
       FFI::GDAL::GDAL.GDALGetColorEntryCount(@c_pointer)
     end
 
     # @param index [Integer]
     # @return [GDAL::ColorEntry]
+    sig { params(index: Integer).returns(T.nilable(GDAL::ColorEntry)) }
     def color_entry(index)
       @color_entries.fetch(index) do
         color_entry = FFI::GDAL::GDAL.GDALGetColorEntry(@c_pointer, index)
@@ -113,6 +123,7 @@ module GDAL
 
     # @param index [Integer]
     # @return [GDAL::ColorEntry]
+    sig { params(index: Integer).returns(T.nilable(GDAL::ColorEntry)) }
     def color_entry_as_rgb(index)
       entry = color_entry(index)
       return unless entry
@@ -139,6 +150,14 @@ module GDAL
     # @param four [Integer] The `c4` value of the GDAL::ColorEntry
     #   struct to set.
     # @return [GDAL::ColorEntry]
+    sig do
+      params(index: Integer,
+             one: T.nilable(Integer),
+             two: T.nilable(Integer),
+             three: T.nilable(Integer),
+             four: T.nilable(Integer))
+        .returns(T.nilable(GDAL::ColorEntry))
+    end
     def add_color_entry(index, one = nil, two = nil, three = nil, four = nil)
       entry = GDAL::ColorEntry.new
       entry.color1 = one if one
@@ -161,6 +180,13 @@ module GDAL
     # @param end_index [Integer] Index to end the ramp on (0..255)
     # @param end_color [GDAL::ColorEntry] Value to end the ramp.
     # @return [Integer] The total number of entries.  nil or -1 on error.
+    sig do
+      params(start_index: Integer,
+             start_color: GDAL::ColorEntry,
+             end_index: Integer,
+             end_color: GDAL::ColorEntry)
+        .returns(Integer)
+    end
     def create_color_ramp!(start_index, start_color, end_index, end_color)
       start_color_ptr = start_color.c_struct
       end_color_ptr = end_color.c_struct

@@ -1,6 +1,7 @@
-# typed: false
+# typed: true
 # frozen_string_literal: true
 
+require 'sorbet-runtime'
 require 'uri'
 require_relative '../gdal'
 require_relative '../ogr'
@@ -14,6 +15,7 @@ module GDAL
   # responsible for the georeferencing transform and coordinate system
   # definition of all bands.
   class Dataset
+    extend T::Sig
     include MajorObject
     include DatasetMixins::Matching
     include DatasetMixins::AlgorithmMethods
@@ -30,6 +32,9 @@ module GDAL
     # @param access_flag [String] 'r' or 'w'.
     # @param shared [Boolean] Whether or not to open using GDALOpenShared
     #   vs GDALOpen. Defaults to +true+.
+    # @return [GDAL::Dataset, Object] If no block is given, this returns the
+    #   GDAL::Dataset. If a block is given, this returns what the block returns.
+    sig { params(path: String, access_flag: String, shared: T::Boolean).returns(GDAL::Dataset) }
     def self.open(path, access_flag, shared: true)
       ds = new(path, access_flag, shared_open: shared)
 
@@ -62,6 +67,19 @@ module GDAL
     # @option options skip_holes: true
     # @param progress_function [Proc]
     # @raise [GDAL::Error]
+    sig do
+      params(source: T.any(FFI::Pointer, GDAL::Dataset),
+             destination: T.any(FFI::Pointer, GDAL::Dataset),
+             options: T::Hash[T.any(String, Symbol), Object],
+             progress_function: T.any(
+               NilClass,
+               T.proc.params(completion_ratio: Float,
+                             message: T.any(NilClass, String),
+                             progress_arg: T.any(NilClass, Object))
+               .returns(T::Boolean)
+             ))
+        .void
+    end
     def self.copy_whole_raster(source, destination, options = {}, progress_function = nil)
       source_ptr = GDAL._pointer(GDAL::Dataset, source, autorelease: false)
       dest_ptr = GDAL._pointer(GDAL::Dataset, destination, autorelease: false)
@@ -74,6 +92,11 @@ module GDAL
 
     # @param dataset [GDAL::Dataset]
     # @return [FFI::AutoPointer]
+    sig do
+      params(dataset: T.any(FFI::Pointer, GDAL::Dataset),
+             warn_on_nil: T::Boolean)
+        .returns(FFI::AutoPointer)
+    end
     def self.new_pointer(dataset, warn_on_nil: true)
       ptr = GDAL._pointer(GDAL::Dataset, dataset, warn_on_nil: warn_on_nil, autorelease: false)
 
@@ -81,8 +104,9 @@ module GDAL
     end
 
     # @param pointer [FFI::Pointer]
+    sig { params(pointer: FFI::Pointer).void }
     def self.release(pointer)
-      return unless pointer && !pointer.null?
+      return if pointer.null?
 
       FFI::GDAL::GDAL.GDALClose(pointer)
     end
@@ -93,6 +117,7 @@ module GDAL
 
     # @return [FFI::Pointer] Pointer to the GDALDatasetH that's represented by
     #   this Ruby object.
+    sig { returns(FFI::Pointer) }
     attr_reader :c_pointer
 
     # @param path_or_pointer [String, FFI::Pointer] Path to the file that
@@ -101,6 +126,7 @@ module GDAL
     # @param access_flag [String] 'r' or 'w'.
     # @param shared_open [Boolean] Whether or not to open using GDALOpenShared
     #   vs GDALOpen. Defaults to +true+.
+    sig { params(path_or_pointer: T.any(String, FFI::Pointer), access_flag: String, shared_open: T::Boolean).void }
     def initialize(path_or_pointer, access_flag, shared_open: true)
       @c_pointer =
         if path_or_pointer.is_a? String
@@ -128,6 +154,7 @@ module GDAL
     end
 
     # Close the dataset.
+    sig { void }
     def close
       Dataset.release(@c_pointer)
 
@@ -135,6 +162,7 @@ module GDAL
     end
 
     # @return [Symbol]
+    sig { returns(Symbol) }
     def access_flag
       flag = FFI::GDAL::GDAL.GDALGetAccess(@c_pointer)
 
@@ -143,6 +171,7 @@ module GDAL
 
     # @return [GDAL::Driver] The driver to be used for working with this
     #   dataset.
+    sig { returns(GDAL::Driver) }
     def driver
       driver_ptr = FFI::GDAL::GDAL.GDALGetDatasetDriver(@c_pointer)
 
@@ -151,6 +180,7 @@ module GDAL
 
     # Fetches all files that form the dataset.
     # @return [Array<String>]
+    sig { returns(T::Array[String]) }
     def file_list
       list_pointer = FFI::GDAL::GDAL.GDALGetFileList(@c_pointer)
       return [] if list_pointer.null?
@@ -162,11 +192,13 @@ module GDAL
     end
 
     # Flushes all write-cached data to disk.
+    sig { void }
     def flush_cache
       FFI::GDAL::GDAL.GDALFlushCache(@c_pointer)
     end
 
     # @return [Integer]
+    sig { returns(Integer) }
     def raster_x_size
       return 0 if null?
 
@@ -174,6 +206,7 @@ module GDAL
     end
 
     # @return [Integer]
+    sig { returns(Integer) }
     def raster_y_size
       return 0 if null?
 
@@ -181,6 +214,7 @@ module GDAL
     end
 
     # @return [Integer]
+    sig { returns(Integer) }
     def raster_count
       return 0 if null?
 
@@ -189,6 +223,7 @@ module GDAL
 
     # @param raster_index [Integer]
     # @return [GDAL::RasterBand]
+    sig { params(raster_index: Integer).returns(GDAL::RasterBand) }
     def raster_band(raster_index)
       if raster_index > raster_count
         raise GDAL::InvalidRasterBand, "Invalid raster band number '#{raster_index}'. Must be <= #{raster_count}"
@@ -200,10 +235,11 @@ module GDAL
       GDAL::RasterBand.new(raster_band_ptr, self)
     end
 
-    # @param type [FFI::GDAL::GDAL::DataType]
+    # @param type [FFI::Enum] One of FFI::GDAL::GDAL::DataType.
     # @param options [Hash]
     # @raise [GDAL::Error]
     # @return [GDAL::RasterBand, nil]
+    sig { params(type: FFI::Enum, options: T::Hash[T.any(String, Symbol), Object]).returns(GDAL::RasterBand) }
     def add_band(type, **options)
       options_ptr = GDAL::Options.pointer(options)
 
@@ -218,8 +254,9 @@ module GDAL
     #
     # @param flags [Array<Symbol>, Symbol] Any of the :GMF symbols.
     # @raise [GDAL::Error]
+    sig { params(flags: T::Array[Symbol]).void }
     def create_mask_band(*flags)
-      flag_value = parse_mask_flag_symbols(flags)
+      flag_value = parse_mask_flag_symbols(T.unsafe(flags))
 
       GDAL::CPLErrorHandler.manually_handle('Unable to create Dataset mask band') do
         FFI::GDAL::GDAL.GDALCreateDatasetMaskBand(@c_pointer, flag_value)
@@ -227,6 +264,7 @@ module GDAL
     end
 
     # @return [String]
+    sig { returns(String) }
     def projection
       # Returns a pointer to an internal projection reference string. It should
       # not be altered, freed or expected to last for long.
@@ -238,6 +276,7 @@ module GDAL
 
     # @param new_projection [String] Should be in WKT or PROJ.4 format.
     # @raise [GDAL::Error]
+    sig { params(new_projection: String).void }
     def projection=(new_projection)
       GDAL::CPLErrorHandler.manually_handle('Unable to set projection') do
         FFI::GDAL::GDAL.GDALSetProjection(@c_pointer, new_projection.to_s)
@@ -246,6 +285,7 @@ module GDAL
 
     # @return [GDAL::GeoTransform]
     # @raise [GDAL::Error]
+    sig { returns(GDAL::GeoTransform) }
     def geo_transform
       return @geo_transform if @geo_transform
 
@@ -261,6 +301,7 @@ module GDAL
     # @param new_transform [GDAL::GeoTransform, FFI::Pointer]
     # @return [GDAL::GeoTransform]
     # @raise [GDAL::Error]
+    sig { params(new_transform: GDAL::GeoTransform).returns(GDAL::GeoTransform) }
     def geo_transform=(new_transform)
       new_pointer = GDAL._pointer(GDAL::GeoTransform, new_transform)
 
@@ -272,6 +313,7 @@ module GDAL
     end
 
     # @return [Integer]
+    sig { returns(Integer) }
     def gcp_count
       return 0 if null?
 
@@ -279,6 +321,7 @@ module GDAL
     end
 
     # @return [String]
+    sig { returns(String) }
     def gcp_projection
       return '' if null?
 
@@ -289,6 +332,7 @@ module GDAL
     end
 
     # @return [FFI::GDAL::GCP]
+    sig { returns(FFI::GDAL::GCP) }
     def gcps
       return FFI::GDAL::GCP.new if null?
 
@@ -311,10 +355,23 @@ module GDAL
     #   * :none
     # @param overview_levels [Array<Integer>] The list of overview decimation
     #   factors to build.
-    # @param band_numbers [Array<Integer>] The numbers of the bands to build
+    # @param band_numbers [NilClass, Array<Integer>] The numbers of the bands to build
     #   overviews from.
     # @see http://www.gdal.org/gdaladdo.html
     # @raise [GDAL::Error]
+    sig do
+      params(resampling: T.any(String, Symbol),
+             overview_levels: T::Array[Integer],
+             progress_function: T.any(
+               NilClass,
+               T.proc.params(completion_ratio: Float,
+                             message: T.any(NilClass, String),
+                             progress_arg: T.any(NilClass, Object))
+               .returns(T::Boolean)
+             ),
+             band_numbers: T.any(T::Array[Integer], NilClass))
+        .void
+    end
     def build_overviews(resampling, overview_levels, progress_function = nil, band_numbers: nil)
       resampling_string = case resampling
                           when String
@@ -378,6 +435,22 @@ module GDAL
     # @return [FFI::MemoryPointer] The buffer that was passed in.
     # @raise [GDAL::Error] On failure.
     # rubocop:disable Metrics/ParameterLists
+    sig do
+      params(access_flag: String,
+             buffer: T.any(NilClass, FFI::MemoryPointer),
+             x_size: T.any(Integer, NilClass),
+             y_size: T.any(Integer, NilClass),
+             x_offset: Integer,
+             y_offset: Integer,
+             buffer_x_size: T.any(Integer, NilClass),
+             buffer_y_size: T.any(Integer, NilClass),
+             buffer_data_type: T.any(FFI::Enum, NilClass),
+             band_numbers: T.any(T::Array[Integer], NilClass),
+             pixel_space: Integer,
+             line_space: Integer,
+             band_space: Integer)
+        .returns(FFI::MemoryPointer)
+    end
     def raster_io(access_flag, buffer = nil,
       x_size: nil, y_size: nil, x_offset: 0, y_offset: 0,
       buffer_x_size: nil, buffer_y_size: nil, buffer_data_type: nil,
@@ -429,6 +502,7 @@ module GDAL
     # Creates a OGR::SpatialReference object from the dataset's projection.
     #
     # @return [OGR::SpatialReference]
+    sig { returns(T.any(NilClass, OGR::SpatialReference)) }
     def spatial_reference
       return @spatial_reference if @spatial_reference
 
@@ -444,6 +518,7 @@ module GDAL
     #
     # @param flags [Symbol]
     # @return [Integer]
+    sig { params(flags: T::Array[Symbol]).returns(Integer) }
     def parse_mask_flag_symbols(*flags)
       flags.reduce(0) do |result, flag|
         result | case flag
@@ -460,6 +535,7 @@ module GDAL
     # @param x_buffer_size [Integer]
     # @param y_buffer_size [Integer]
     # @return [Integer]
+    sig { params(buffer_data_type: FFI::Enum, x_buffer_size: Integer, y_buffer_size: Integer).returns(Integer) }
     def valid_min_buffer_size(buffer_data_type, x_buffer_size, y_buffer_size)
       data_type_bytes = GDAL::DataType.size(buffer_data_type) / 8
 
@@ -468,8 +544,9 @@ module GDAL
 
     # Makes a pointer of +band_numbers+.
     #
-    # @param band_numbers [Array<Integer>]
+    # @param band_numbers [Array<Integer>, NilClass]
     # @return [Array<FFI::MemoryPointer, Integer>]
+    sig { params(band_numbers: T.any(T::Array[Integer], NilClass)).returns([FFI::MemoryPointer, Integer]) }
     def band_numbers_args(band_numbers)
       band_count = band_numbers&.size || 0
       ptr = FFI::MemoryPointer.new(:int, band_count)
