@@ -57,6 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `GDAL::RasterBand#write_block`
 - `GDAL` errors that return `CPLE_AppDefined` now raise `GDAL::Error`.
 - `GDAL` errors now truncate less of the backtrace.
+- `GDAL::Dataset#build_overviews`: the last param used to be a block-param;
+  changed to be a normal (with `nil` default) param to allow passing in a
+  `FFI::CPL::Progress` function, if desired.
 
 #### OGR
 

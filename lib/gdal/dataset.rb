@@ -315,7 +315,7 @@ module GDAL
     #   overviews from.
     # @see http://www.gdal.org/gdaladdo.html
     # @raise [GDAL::Error]
-    def build_overviews(resampling, overview_levels, band_numbers: nil, &progress)
+    def build_overviews(resampling, overview_levels, progress_function = nil, band_numbers: nil)
       resampling_string = case resampling
                           when String
                             resampling.upcase
@@ -335,7 +335,7 @@ module GDAL
           overview_levels_ptr,
           band_count,
           band_numbers_ptr,
-          progress,
+          progress_function,
           nil
         )
       end
