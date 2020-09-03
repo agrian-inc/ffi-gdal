@@ -6247,9 +6247,6 @@ class FFI::ManagedStruct
 end
 
 class FFI::MemoryPointer
-end
-
-class FFI::MemoryPointer
   def self.from_string(_); end
 end
 
@@ -8178,13 +8175,9 @@ class FFI::Pointer
 
   def address(); end
 
-  def autorelease=(autorelease); end
-
   def autorelease?(); end
 
   def free(); end
-
-  def initialize(*_); end
 
   def null?(); end
 
@@ -8714,6 +8707,31 @@ end
 
 module GC
   def self.verify_transient_heap_internal_consistency(); end
+end
+
+class GDAL::ColorEntry
+  extend ::T::Private::Methods::MethodHooks
+  extend ::T::Private::Methods::SingletonMethodHooks
+end
+
+class GDAL::ColorInterpretation
+  extend ::T::Private::Methods::MethodHooks
+  extend ::T::Private::Methods::SingletonMethodHooks
+end
+
+class GDAL::ColorTable
+  extend ::T::Private::Methods::MethodHooks
+  extend ::T::Private::Methods::SingletonMethodHooks
+end
+
+class GDAL::DataType
+  extend ::T::Private::Methods::MethodHooks
+  extend ::T::Private::Methods::SingletonMethodHooks
+end
+
+class GDAL::Dataset
+  extend ::T::Private::Methods::MethodHooks
+  extend ::T::Private::Methods::SingletonMethodHooks
 end
 
 class GDAL::Grid
@@ -10421,10 +10439,20 @@ end
 
 class OGR::GeometryCollection
   include ::OGR::GeometryMixins::Extensions
+  include ::Enumerable
 end
 
 class OGR::GeometryCollection
   extend ::OGR::Geometry::ClassMethods
+end
+
+module OGR::GeometryMixins::ContainerMixins
+  include ::Enumerable
+  def each(&blk); end
+end
+
+module OGR::GeometryTypes::Container
+  include ::Enumerable
 end
 
 class OGR::Layer
@@ -10444,6 +10472,7 @@ end
 
 class OGR::MultiLineString
   include ::OGR::GeometryMixins::Extensions
+  include ::Enumerable
 end
 
 class OGR::MultiLineString
@@ -10452,6 +10481,7 @@ end
 
 class OGR::MultiPoint
   include ::OGR::GeometryMixins::Extensions
+  include ::Enumerable
 end
 
 class OGR::MultiPoint
@@ -10460,6 +10490,7 @@ end
 
 class OGR::MultiPolygon
   include ::OGR::GeometryMixins::Extensions
+  include ::Enumerable
 end
 
 class OGR::MultiPolygon
@@ -10484,6 +10515,7 @@ end
 
 class OGR::Polygon
   include ::OGR::GeometryMixins::Extensions
+  include ::Enumerable
 end
 
 class OGR::Polygon
